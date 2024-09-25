@@ -1,0 +1,170 @@
+﻿@model WebApp.Models.AuctionItemViewModel
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+<hr />
+<div>
+    <div class = "col-sm-5">
+        <img src="~/uploads/@Model.ImageFileName" height="200px" width="150px" />
+    </div>
+    <br />
+    <dl class="row">
+        @if (User.IsInRole("Admin"))
+        {
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.Id)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.Id)
+            </dd>
+        }
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Description)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Description)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.StartingPrice)
+        </dt>
+        <dd class = "col-sm-10">
+            $ @Html.DisplayFor(model => model.StartingPrice)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.CurrentPrice)
+        </dt>
+        <dd class = "col-sm-10">
+            $ @Html.DisplayFor(model => model.CurrentPrice)
+        </dd>
+        @if (User.IsInRole("Admin"))
+        {
+            <dt class = "col-sm-2">
+                @Html.DisplayNameFor(model => model.EndTime)
+            </dt>
+            <dd class = "col-sm-10">
+                @Html.DisplayFor(model => model.EndTime)
+            </dd>
+        }
+        @if (User.IsInRole("Regular"))
+        {
+            <dt class = "col-sm-2 text-danger">
+                Time Left
+            </dt>
+            <dd class = "col-sm-10">
+                <p class="text-danger" id="countdown"></p>
+            </dd>
+        }
+        
+    </dl>
+</div>
+
+@if (User.IsInRole("Admin"))
+{
+    <div>
+        @Html.ActionLink("Update", "Update", new {  id=@Model.Id }, new { @class = "btn btn-success"}) 
+        @Html.ActionLink("Delete", "Delete", new {  id=@Model.Id }, new { @class = "btn btn-danger"})
+    </div>
+
+    @if (Model.Bids != null)
+    {
+        <br />
+        <br />
+        <h4>
+           <b> Bids on @Model.Name</b>
+        </h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>
+                        Bid Amount
+                    </th>
+                    <th>
+                        Bidder Name
+                    </th>
+                    <th>
+                        Bid Time
+                    </th>
+                    <th>
+                        Auto Bid
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var bid in Model.Bids)
+                {
+                    <tr>
+                        <td>
+                            $ @bid.BidAmount
+                        </td>
+                        <td>
+                            @bid.BidderName
+                        </td>
+                        <td>
+                            @bid.BidTime
+                        </td>
+                        <td>
+                            @if (bid.IsAutoBid == true)
+                            {
+                                <span>Yes</span>
+                            }
+                            else
+                            {
+                                <span>No</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else if(User.IsInRole("Regular") && (bool)ViewData["CanUserBid"])
+{
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="PlaceBid" asp-controller="Bid" method="post">
+                <div class="form-group">
+                    <input type="hidden" name="AuctionItemId" value="@Model.Id" />
+                    
+                    <label asp-for="BidAmount" class="control-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white">$</span>
+                        @{
+                            var minPrice = Model.CurrentPrice + 1;
+                        }
+                        <input asp-for="BidAmount" class="form-control" type="number" step="1" min="@minPrice" required />
+                    </div>
+                    <span asp-validation-for="BidAmount" class="text-danger"></span>
+                </div>
+                <div>
+                    @Html.CheckBox("IsAutoBid", false)
+                    Activate Auto-Bid
+                </div>
+                <input type="submit" value="Submit Bid" class="btn btn-success" />
+            </form>
+        </div>
+    </div>
+}
+<br />
+<br />
+<a asp-action="Index">Back</a>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var endTime = new Date('@Model.EndTime.ToString("yyyy-MM-ddTHH:mm:ss")');
+            showCountdown(endTime);
+        });
+    </script>
+}

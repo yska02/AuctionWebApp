@@ -1,0 +1,33 @@
+﻿@model IEnumerable<WebApp.Models.AuctionItemViewModel>
+
+@{
+    ViewData["Title"] = "Auction";
+}
+
+<h1>Auction Items</h1>
+
+<div class="container">
+    @if (Model != null && Model.Any())
+    {   
+    <div class="card font-bold">
+        <div class="row">
+            @foreach (var item in Model) 
+            {
+                <div class="col-md-3">
+                    <img src="~/uploads/@item.ImageFileName" height="200px" width="150px"/>
+                    <h5>@Html.DisplayFor(modelItem => item.Name)</h5>
+                    <p>$ @Html.DisplayFor(modelItem => item.CurrentPrice)</p>
+
+                    @Html.ActionLink("Bid Now", "Details", new {  id=item.Id }, new { @class="btn btn-success" })
+                </div>
+            }
+        </div>
+    </div>
+    }
+    else
+    {
+        <div>
+            No data
+        </div>
+    }
+</div>
